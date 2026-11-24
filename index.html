@@ -1,7 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="utf-8">
+<html lang="pt-BR"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Matriz de Maturidade – Auditoria de Manutenção</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -57,156 +55,46 @@ svg text{fill:var(--mut);font:11px 'JetBrains Mono',monospace}
 .cmp main{padding:16px 18px}.cmp .card{padding:12px 14px}.cmp .big{font-size:30px}.cmp td,.cmp th{padding:2px 4px}
 .sr{flex-direction:row-reverse}.sr aside{border-right:0;border-left:1px solid var(--line)}
 .st{flex-direction:column}.st aside{width:100%;height:auto;position:static;padding:12px}.st nav{flex-direction:row;overflow:auto;margin-top:10px}.st nav button{white-space:nowrap}.st .foot{display:none}
+.hs{display:flex;gap:10px;flex-wrap:wrap}
 .hk .gk,.hc .gc,.hr .gr,.hg .gg{display:none}
 #lg{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:var(--bg);z-index:50;padding:16px}.lock #lg{display:flex}.lock main,.lock aside{display:none}.ro .form,.ro .btn.d{display:none}td select:disabled{opacity:1;cursor:default}
 input[type=color]{padding:2px;height:36px;width:60px;vertical-align:middle}label.sub{display:flex;gap:8px;align-items:center}
 @media(max-width:900px){body{flex-direction:column}aside{width:100%;height:auto;position:static;padding:12px}nav{flex-direction:row;overflow:auto;margin-top:10px}nav button{white-space:nowrap}.foot{display:none}.grid{grid-template-columns:1fr 1fr}.two{grid-template-columns:1fr}main{padding:18px 14px}.row{grid-template-columns:100px 1fr 44px}}
-</style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-</head>
-<body>
-<aside>
-<div class="brand"><span id="bt"></span><small id="bs"></small></div>
-<nav id="nav"></nav>
-<div class="foot" id="foot"></div>
-</aside>
-
-<div id="lg"></div>
-
-<main>
-<header>
-<div>
-<h1 id="t"></h1>
-<p id="st"></p>
-</div>
-<select id="f" title="Filtrar por regional"></select>
-<select id="fp" title="Filtrar por unidade/planta"></select>
-</header>
-<div id="v"></div>
-</main>
-
+</style><script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script></head><body>
+<aside><div class="brand"><span id="bt"></span><small id="bs"></small></div>
+<nav id="nav"></nav><div class="foot" id="foot"></div></aside>
+<div id="lg"></div><main><header><div><h1 id="t"></h1><p id="st"></p></div><div class="hs"><select id="f" title="Filtrar por regional"></select><select id="u" title="Filtrar por unidade" style="display:none"></select></div></header><div id="v"></div></main>
 <script>
-const SEED={
-"reqs":["Ordem de Serviço Preventivas","Equipamentos Lavagem","Equipamentos Secagem","Equipamentos de Acabamento","Equipamentos Críticos","Manutenção de Primeiro Nível (Limpeza)","Manutenção de Segundo Nível (Limpeza)","Planos de Ação","Entendimento dos KPIs","HH x Horas de Serviços","TdB X Software de Gestão de Manutenção","Analise de Falha","Habilidades dos Técnicos e Certificados","TCL X WorkStream x Manutenção","Gestão de Custos","Gestão de Spare Parts","Condições da Fabrica","Lubrificação"],
-"plants":[
-{"r":"CO","n":"Brasilia","s":[0.5,0.25,0.25,0.75,0.5,0.5,0.75,1,0.75,0.5,0,1,1,0,0.75,null,0.5,0.75]},
-{"r":"NE","n":"Paço do Lumiar","s":[0.5,0.5,0.5,0.5,0.75,0.75,0.5,0.5,0,0.75,0,0,1,0,0.25,0.25,0.75,0.5]},
-{"r":"NE","n":"Eusebio","s":[0.25,0.5,0.75,0.5,0.75,0.75,0.5,0,0.5,0.75,0,0,0,0,0.5,1,0,0.75]},
-{"r":"SP","n":"Jundiai Uniformes","s":[0.75,0.75,0.75,1,0.75,1,0.75,0,0.75,0.75,0,0,1,0,0.5,0,0.75,0.75]},
-{"r":"NE","n":"Paulista","s":[0.5,0.5,0.75,0.5,0.75,0.75,0.75,0,1,0,0,0,0.75,0,1,null,0.75,0.75]},
-{"r":"NE","n":"Sauipe","s":[0.5,0.5,0.5,0.5,0.25,0.5,0.5,0,0.25,0,0,0,0.25,0,0.25,null,0,0.25]},
-{"r":"SE","n":"Engenho Nogueira","s":[0.75,0.5,0.5,0.75,0.5,0.5,0.75,0.5,0.5,0.75,0,0,0.75,0,0.75,0.75,0.75,0.75]},
-{"r":"SP","n":"Santana de Parnaiba","s":[0.75,0.75,0.5,0.5,0.75,0.5,1,1,0.75,0.75,0,0,0,0,0.5,0.5,0.25,0.5]},
-{"r":"SE","n":"Don Silverio","s":[0.5,0.5,0.75,0.5,0.75,0.5,0.75,0.75,0.75,1,0,0,1,0,0.5,0.25,0.25,0.75]},
-{"r":"SP","n":"Jundiai Hospital","s":[0.5,1,0.75,0.75,0,0.75,0.75,0.5,0.5,0.5,0,0,0,0,0.5,0,0.75,0.75]},
-{"r":"SP","n":"Caieiras","s":[0.25,0.5,0.25,0.25,0.5,0.5,0.5,1,0.5,0.5,0,0,1,0,0.5,0.75,0.5,0.25]},
-{"r":"SE","n":"Duque de Caxias","s":[0.5,0.5,0.75,0.5,0.5,0.5,0.5,1,0.5,1,0,0,1,0,0.75,0.25,0.25,0.5]},
-{"r":"SE","n":"Boa Esperança","s":[0.25,0.25,0.5,0.5,0.5,1,0.75,0.5,1,0.75,0,0,1,0,0.75,0.75,0.75,0.5]},
-{"r":"SE","n":"Cedral","s":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},
-{"r":"SE","n":"Jardinopolis","s":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},
-{"r":"SP","n":"Piracicaba","s":[0.5,0.5,0.5,null,0.75,0.5,0.75,null,0.75,null,0.5,null,1,null,1,null,1,null]},
-{"r":"SE","n":"Serra","s":[0.5,0.5,0.25,0.5,0.5,0.5,0.5,0.75,0.5,0.5,0,0,0.75,0,0.25,0.25,0.75,0.5]},
-{"r":"Sul","n":"Araquari","s":[1,0.75,1,0.75,0.75,0.75,0.75,0.25,0.75,1,0.25,0,1,0,1,0,0.75,0.5]},
-{"r":"Sul","n":"Almirante de Tamandaré","s":[0.75,0.25,0.5,0.5,0.75,0.5,0.5,1,1,0.75,1,0.5,0.75,0,0.75,0.5,0.5,0.5]},
-{"r":"Sul","n":"Maringa","s":[0.75,0.5,0.75,0.75,0.75,0.75,0.5,0.75,0.75,0,1,0,1,1,0.25,0.25,0.25,0.5]},
-{"r":"Sul","n":"Ponta Grossa","s":[0.25,0.5,0.25,0.5,0.25,0.75,0.5,0,0.5,0.75,0.75,0,0,0.75,1,0.5,0.5,0]},
-{"r":"SP","n":"Diadema","s":[0.5,0.25,0.25,0.25,0.5,0.25,0.5,0.5,0.5,0.25,0,0,0.25,0,0.75,0.25,0.25,0.25]},
-{"r":"SP","n":"Jundiai Hotel","s":[0.5,0.5,0.75,0.75,0,0.5,0.75,0.5,0.5,0.25,0,0,0,0,0.75,0.75,0.75,0.25]},
-{"r":"SP","n":"Jundiai Shop Towels","s":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},
-{"r":"Sul","n":"Palhoça","s":[0.25,0.5,0.5,0.25,0.5,0.75,0.5,0,null,null,0,0,0.75,0,1,0,0.75,null]},
-{"r":"Sul","n":"São Jose dos Pinhais","s":[0.5,0.5,0.25,0.5,0.5,0.5,0.75,0.5,1,0.5,0,0,0.25,0,1,0.75,0.75,0.75]},
-{"r":"Sul","n":"São Jose I","s":[0.75,0.5,0.5,0.5,0.5,null,null,0,null,null,0,0,1,0,0.5,null,0.5,null]}
-]};
-
-const FIX={
-"Analise de Falha":"Análise de Falha",
-"Condições da Fabrica":"Condições da Fábrica",
-"Brasilia":"Brasília",
-"Eusebio":"Eusébio",
-"Sauipe":"Sauípe",
-"Don Silverio":"Dom Silvério",
-"Jardinopolis":"Jardinópolis",
-"Maringa":"Maringá",
-"São Jose dos Pinhais":"São José dos Pinhais",
-"São Jose I":"São José I",
-"Santana de Parnaiba":"Santana de Parnaíba",
-"Jundiai Uniformes":"Jundiaí Uniformes",
-"Jundiai Hospital":"Jundiaí Hospital",
-"Jundiai Hotel":"Jundiaí Hotel",
-"Jundiai Shop Towels":"Jundiaí Shop Towels"
-};
-
+const SEED={"reqs":["Ordem de Serviço Preventivas","Equipamentos Lavagem","Equipamentos Secagem","Equipamentos de Acabamento","Equipamentos Críticos","Manutenção de Primeiro Nível (Limpeza)","Manutenção de Segundo Nível (Limpeza)","Planos de Ação","Entendimento dos KPIs","HH x Horas de Serviços","TdB X Software de Gestão de Manutenção","Analise de Falha","Habilidades dos Técnicos e Certificados","TCL X WorkStream x Manutenção","Gestão de Custos","Gestão de Spare Parts","Condições da Fabrica","Lubrificação"],"plants":[{"r":"CO","n":"Brasilia","s":[0.5,0.25,0.25,0.75,0.5,0.5,0.75,1,0.75,0.5,0,1,1,0,0.75,null,0.5,0.75]},{"r":"NE","n":"Paço do Lumiar","s":[0.5,0.5,0.5,0.5,0.75,0.75,0.5,0.5,0,0.75,0,0,1,0,0.25,0.25,0.75,0.5]},{"r":"NE","n":"Eusebio","s":[0.25,0.5,0.75,0.5,0.75,0.75,0.5,0,0.5,0.75,0,0,0,0,0.5,1,0,0.75]},{"r":"SP","n":"Jundiai Uniformes","s":[0.75,0.75,0.75,1,0.75,1,0.75,0,0.75,0.75,0,0,1,0,0.5,0,0.75,0.75]},{"r":"NE","n":"Paulista","s":[0.5,0.5,0.75,0.5,0.75,0.75,0.75,0,1,0,0,0,0.75,0,1,null,0.75,0.75]},{"r":"NE","n":"Sauipe","s":[0.5,0.5,0.5,0.5,0.25,0.5,0.5,0,0.25,0,0,0,0.25,0,0.25,null,0,0.25]},{"r":"SE","n":"Engenho Nogueira","s":[0.75,0.5,0.5,0.75,0.5,0.5,0.75,0.5,0.5,0.75,0,0,0.75,0,0.75,0.75,0.75,0.75]},{"r":"SP","n":"Santana de Parnaiba","s":[0.75,0.75,0.5,0.5,0.75,0.5,1,1,0.75,0.75,0,0,0,0,0.5,0.5,0.25,0.5]},{"r":"SE","n":"Don Silverio","s":[0.5,0.5,0.75,0.5,0.75,0.5,0.75,0.75,0.75,1,0,0,1,0,0.5,0.25,0.25,0.75]},{"r":"SP","n":"Jundiai Hospital","s":[0.5,1,0.75,0.75,0,0.75,0.75,0.5,0.5,0.5,0,0,0,0,0.5,0,0.75,0.75]},{"r":"SP","n":"Caieiras","s":[0.25,0.5,0.25,0.25,0.5,0.5,0.5,1,0.5,0.5,0,0,1,0,0.5,0.75,0.5,0.25]},{"r":"SE","n":"Duque de Caxias","s":[0.5,0.5,0.75,0.5,0.5,0.5,0.5,1,0.5,1,0,0,1,0,0.75,0.25,0.25,0.5]},{"r":"SE","n":"Boa Esperança","s":[0.25,0.25,0.5,0.5,0.5,1,0.75,0.5,1,0.75,0,0,1,0,0.75,0.75,0.75,0.5]},{"r":"SE","n":"Cedral","s":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},{"r":"SE","n":"Jardinopolis","s":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},{"r":"SP","n":"Piracicaba","s":[0.5,0.5,0.5,null,0.75,0.5,0.75,null,0.75,null,0.5,null,1,null,1,null,1,null]},{"r":"SE","n":"Serra","s":[0.5,0.5,0.25,0.5,0.5,0.5,0.5,0.75,0.5,0.5,0,0,0.75,0,0.25,0.25,0.75,0.5]},{"r":"Sul","n":"Araquari","s":[1,0.75,1,0.75,0.75,0.75,0.75,0.25,0.75,1,0.25,0,1,0,1,0,0.75,0.5]},{"r":"Sul","n":"Almirante de Tamandaré","s":[0.75,0.25,0.5,0.5,0.75,0.5,0.5,1,1,0.75,1,0.5,0.75,0,0.75,0.5,0.5,0.5]},{"r":"Sul","n":"Maringa","s":[0.75,0.5,0.75,0.75,0.75,0.75,0.5,0.75,0.75,0,1,0,1,1,0.25,0.25,0.25,0.5]},{"r":"Sul","n":"Ponta Grossa","s":[0.25,0.5,0.25,0.5,0.25,0.75,0.5,0,0.5,0.75,0.75,0,0,0.75,1,0.5,0.5,0]},{"r":"SP","n":"Diadema","s":[0.5,0.25,0.25,0.25,0.5,0.25,0.5,0.5,0.5,0.25,0,0,0.25,0,0.75,0.25,0.25,0.25]},{"r":"SP","n":"Jundiai Hotel","s":[0.5,0.5,0.75,0.75,0,0.5,0.75,0.5,0.5,0.25,0,0,0,0,0.75,0.75,0.75,0.25]},{"r":"SP","n":"Jundiai Shop Towels","s":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},{"r":"Sul","n":"Palhoça","s":[0.25,0.5,0.5,0.25,0.5,0.75,0.5,0,null,null,0,0,0.75,0,1,0,0.75,null]},{"r":"Sul","n":"São Jose dos Pinhais","s":[0.5,0.5,0.25,0.5,0.5,0.5,0.75,0.5,1,0.5,0,0,0.25,0,1,0.75,0.75,0.75]},{"r":"Sul","n":"São Jose I","s":[0.75,0.5,0.5,0.5,0.5,null,null,0,null,null,0,0,1,0,0.5,null,0.5,null]}]};
+const FIX={"Analise de Falha":"Análise de Falha","Condições da Fabrica":"Condições da Fábrica","Brasilia":"Brasília","Eusebio":"Eusébio","Sauipe":"Sauípe","Don Silverio":"Dom Silvério","Jardinopolis":"Jardinópolis","Maringa":"Maringá","São Jose dos Pinhais":"São José dos Pinhais","São Jose I":"São José I","Santana de Parnaiba":"Santana de Parnaíba","Jundiai Uniformes":"Jundiaí Uniformes","Jundiai Hospital":"Jundiaí Hospital","Jundiai Hotel":"Jundiaí Hotel","Jundiai Shop Towels":"Jundiaí Shop Towels"};
 const fx=s=>FIX[String(s).trim()]||String(s).trim();
 const fixAll=o=>{o.reqs=o.reqs.map(fx);o.plants.forEach(p=>p.n=fx(p.n));return o};
 fixAll(SEED);
-
 const fresh=()=>({ideal:.75,reqs:[...SEED.reqs],plants:SEED.plants.map((p,i)=>({...p,s:[...p.s],id:i+1}))});
 const CF=()=>({accent:"#00d6c6",theme:"auto",dens:"normal",side:"left",fs:15,show:{k:1,c:1,r:1,g:1}});
-
 const norm=()=>{fixAll(S);S.ui=S.ui||{};const c=Object.assign(CF(),S.cfg||{});c.show=Object.assign(CF().show,c.show);S.cfg=c};
 const T=(k,d)=>(S.ui&&S.ui[k])||d;
-
-function applyCfg(){
-const c=S.cfg,r=document.documentElement,b=document.body;
-if(c.accent!="#00d6c6")r.style.setProperty("--ac",c.accent);else r.style.removeProperty("--ac");
-r.dataset.theme=c.theme=="auto"?"":c.theme;
-b.style.fontSize=c.fs+"px";
-b.className=(ME?"":"lock ")+(ME&&ME.role=="leitor"?"ro ":"")+(c.dens=="compact"?"cmp ":"")+(c.side=="right"?"sr ":c.side=="top"?"st ":"")+["k","c","r","g"].filter(k=>!c.show[k]).map(k=>"h"+k).join(" ")
-}
-
-const SC=[0,.25,.5,.75,1],
-SCL=["Não implementado / não realizado","Parcial, sem evidências","Parcial, poucas evidências ou qualidade abaixo do status","Implementado, evidências satisfatórias","Referência para outros processos"];
-
-const KEY="matriz_maturidade_v1";
-let S,view="geral",flt="",pflt="",armed=null;
-
+function applyCfg(){const c=S.cfg,r=document.documentElement,b=document.body;if(c.accent!="#00d6c6")r.style.setProperty("--ac",c.accent);else r.style.removeProperty("--ac");r.dataset.theme=c.theme=="auto"?"":c.theme;b.style.fontSize=c.fs+"px";b.className=(ME?"":"lock ")+(ME&&ME.role=="leitor"?"ro ":"")+(c.dens=="compact"?"cmp ":"")+(c.side=="right"?"sr ":c.side=="top"?"st ":"")+["k","c","r","g"].filter(k=>!c.show[k]).map(k=>"h"+k).join(" ")}
+const SC=[0,.25,.5,.75,1],SCL=["Não implementado / não realizado","Parcial, sem evidências","Parcial, poucas evidências ou qualidade abaixo do status","Implementado, evidências satisfatórias","Referência para outros processos"];
+const KEY="matriz_maturidade_v1";let S,view="geral",flt="",armed=null;
 try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
-if(!S||!S.plants)S=fresh();
-norm();
-
+if(!S||!S.plants)S=fresh();norm();
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
-const $=s=>document.querySelector(s),
-esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])),
-pc=x=>x==null?"–":(x*100).toFixed(0)+"%",
-avg=a=>{a=a.filter(x=>x!=null);return a.length?a.reduce((x,y)=>x+y,0)/a.length:null},
-idx=p=>avg(p.s),
-
-list=()=>S.plants.filter(p=>(!flt||p.r===flt)&&(!pflt||String(p.n)===pflt)),
-regs=()=>[...new Set(S.plants.map(p=>p.r))].sort(),
-
-col=x=>x==null?"transparent":`hsl(${Math.round(x*150)},70%,${x==0?58:52}%)`,
-reqAvg=i=>avg(list().map(p=>p.s[i]));
-
-const NAV=[
-["geral","◉","Visão Geral"],
-["matriz","▦","Matriz de Avaliação"],
-["plantas","⌂","Plantas"],
-["reqs","☰","Requisitos"],
-["regs","◈","Regionais"],
-["dados","⚙","Metas & Dados"],
-["custom","✎","Personalizar"]
-];
-
-function bar(v,ideal){
-return `<div class="bar"><i style="width:${Math.min(100,(v||0)*100)}%;background:${v>=S.ideal?'var(--ac)':col(v/ S.ideal*.75)}"></i>${ideal?`<b style="left:${S.ideal*100}%"></b>`:""}</div>`
-}
-
-function chart(){
-const R=S.reqs,W=640,H=230,L=34,B=40,n=R.length;
-if(!n)return"";
-const x=i=>L+(n>1?i*(W-L-10)/(n-1):0),y=v=>H-B-v*(H-B-14);
+const $=s=>document.querySelector(s),esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const pc=x=>x==null?"–":(x*100).toFixed(0)+"%",avg=a=>{a=a.filter(x=>x!=null);return a.length?a.reduce((x,y)=>x+y,0)/a.length:null};
+const idx=p=>avg(p.s),list=()=>S.plants.filter(p=>!flt||p.r===flt),regs=()=>[...new Set(S.plants.map(p=>p.r))].sort();
+const col=x=>x==null?"transparent":`hsl(${Math.round(x*150)},70%,${x==0?58:52}%)`;
+const reqAvg=i=>avg(list().map(p=>p.s[i]));
+const NAV=[["geral","◉","Visão Geral"],["matriz","▦","Matriz de Avaliação"],["plantas","⌂","Plantas"],["reqs","☰","Requisitos"],["regs","◈","Regionais"],["dados","⚙","Metas & Dados"],["custom","✎","Personalizar"]];
+function bar(v,ideal){return `<div class="bar"><i style="width:${Math.min(100,(v||0)*100)}%;background:${v>=S.ideal?'var(--ac)':col(v/ S.ideal*.75)}"></i>${ideal?`<b style="left:${S.ideal*100}%"></b>`:""}</div>`}
+function chart(){const R=S.reqs,W=640,H=230,L=34,B=40,n=R.length;if(!n)return"";const x=i=>L+(n>1?i*(W-L-10)/(n-1):0),y=v=>H-B-v*(H-B-14);
 const pts=R.map((_,i)=>[x(i),y(reqAvg(i)||0)]),line="M"+pts.map(p=>p.join(",")).join("L");
 return `<svg viewBox="0 0 ${W} ${H}" width="100%">${[0,.25,.5,.75,1].map(v=>`<line x1="${L}" x2="${W-10}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" opacity=".6"/><text x="0" y="${y(v)+4}">${v*100}%</text>`).join("")}
 <line x1="${L}" x2="${W-10}" y1="${y(S.ideal)}" y2="${y(S.ideal)}" stroke="var(--warn)" stroke-dasharray="5 4"/>
 <path d="${line}L${x(n-1)},${y(0)}L${x(0)},${y(0)}Z" fill="var(--ac)" opacity=".15"/><path d="${line}" fill="none" stroke="var(--ac)" stroke-width="2.5"/>
-${pts.map((p,i)=>`<circle cx="${p[0]}" cy="${p[1]}" r="4" fill="var(--ac)"><title>${esc(R[i])}: ${pc(reqAvg(i))}</title></circle><text x="${p[0]}" y="${H-24}" text-anchor="middle">R${i+1}</text>`).join("")}</svg>`
-}
-
+${pts.map((p,i)=>`<circle cx="${p[0]}" cy="${p[1]}" r="4" fill="var(--ac)"><title>${esc(R[i])}: ${pc(reqAvg(i))}</title></circle><text x="${p[0]}" y="${H-24}" text-anchor="middle">R${i+1}</text>`).join("")}</svg>`}
 const V={
-
-geral(){
-const L=list(),ix=L.map(idx),m=avg(ix),gap=m==null?null:(m-S.ideal)/S.ideal,
-ok=ix.filter(v=>v!=null&&v>=S.ideal).length,zero=ix.filter(v=>!v).length;
+geral(){const L=list(),ix=L.map(idx),m=avg(ix),gap=m==null?null:(m-S.ideal)/S.ideal,ok=ix.filter(v=>v!=null&&v>=S.ideal).length,zero=ix.filter(v=>!v).length;
 const ra=S.reqs.map((r,i)=>[r,reqAvg(i)]).filter(a=>a[1]!=null).sort((a,b)=>a[1]-b[1]),
 rk=[...L].map(p=>[p.n,idx(p)]).sort((a,b)=>(b[1]||0)-(a[1]||0));
 return `<div class="grid gk">
@@ -216,82 +104,18 @@ return `<div class="grid gk">
 <div class="card"><div class="lb">${T("k4","Requisito mais crítico")}</div><div class="big bad" style="font-size:26px;line-height:1.15">${ra[0]?pc(ra[0][1]):"–"}</div><div class="sub">${esc(ra[0]?ra[0][0]:"")}</div></div></div>
 <div class="two"><div class="card p gc"><h3>${T("h_c","Maturidade por requisito")}</h3><span class="sub">Média das plantas · linha tracejada = ideal</span>${chart()}</div>
 <div class="card p gr"><h3>${T("h_r","Ranking de plantas")}</h3><span class="sub">Índice de maturidade atual</span><div style="max-height:260px;overflow:auto">${rk.map(r=>`<div class="row"><span title="${esc(r[0])}">${esc(r[0])}</span>${bar(r[1],1)}<em>${pc(r[1])}</em></div>`).join("")}</div></div></div>
-<div class="card p gg"><h3>${T("h_g","Requisitos com maior gap")}</h3><span class="sub">Menores médias primeiro</span>${ra.slice(0,6).map(r=>`<div class="row" style="grid-template-columns:260px 1fr 48px"><span title="${esc(r[0])}">${esc(r[0])}</span>${bar(r[1],1)}<em>${pc(r[1])}</em></div>`).join("")}</div>`
-},
-
-matriz(){
-const L=list();
-return `<div class="sub" style="margin-bottom:10px">Use as listas para alterar a nota de cada célula. “–” = não avaliado (ignorado na média).</div>
+<div class="card p gg"><h3>${T("h_g","Requisitos com maior gap")}</h3><span class="sub">Menores médias primeiro</span>${ra.slice(0,6).map(r=>`<div class="row" style="grid-template-columns:260px 1fr 48px"><span title="${esc(r[0])}">${esc(r[0])}</span>${bar(r[1],1)}<em>${pc(r[1])}</em></div>`).join("")}</div>`},
+matriz(){const L=list();return `<div class="sub" style="margin-bottom:10px">Use as listas para alterar a nota de cada célula. “–” = não avaliado (ignorado na média).</div>
 <div class="tw" id="tw"><table><thead><tr><th>Planta / Regional</th>${S.reqs.map((r,i)=>`<th class="v"><div title="${esc(r)}">R${i+1} · ${esc(r)}</div></th>`).join("")}<th>Índice</th></tr></thead><tbody>
 ${L.map(p=>`<tr><td><b>${esc(p.n)}</b> <span class="tag">${esc(p.r)}</span></td>${S.reqs.map((_,i)=>`<td><select data-c="${p.id}:${i}" style="background:${col(p.s[i])}">${[null,...SC].map(v=>`<option value="${v??""}"${p.s[i]===v?" selected":""}>${v==null?"–":v}</option>`).join("")}</select></td>`).join("")}<td><b style="color:${idx(p)>=S.ideal?'var(--ac)':'var(--tx)'}">${pc(idx(p))}</b></td></tr>`).join("")}
-<tr><td><b>Média por requisito</b></td>${S.reqs.map((_,i)=>`<td><b>${pc(reqAvg(i))}</b></td>`).join("")}<td><b>${pc(avg(L.map(idx)))}</b></td></tr></tbody></table></div>`
-},
-
-plantas(){
-return `<div class="form"><input id="pn" placeholder="Nome da planta"><input id="pr" list="rl" placeholder="Regional (ex: NE)" size="12"><datalist id="rl">${regs().map(r=>`<option value="${esc(r)}">`).join("")}</datalist><button class="btn" data-a="addp">+ Adicionar planta</button></div>
-<div class="tw"><table><thead><tr><th>Planta</th><th>Regional</th><th>Índice</th><th></th></tr></thead><tbody>${list().map(p=>`<tr><td><input data-f="n:${p.id}" value="${esc(p.n)}"></td><td><input data-f="r:${p.id}" value="${esc(p.r)}" style="min-width:70px"></td><td>${pc(idx(p))}</td><td>${del("p"+p.id,"Remover")}</td></tr>`).join("")}</tbody></table></div>`
-},
-
-reqs(){
-return `<div class="form"><input id="rn" placeholder="Novo requisito" size="34"><button class="btn" data-a="addr">+ Adicionar requisito</button></div>
-<div class="tw"><table><thead><tr><th>#</th><th>Requisito</th><th>Média</th><th></th></tr></thead><tbody>${S.reqs.map((r,i)=>`<tr><td>R${i+1}</td><td><input data-f="q:${i}" value="${esc(r)}" style="min-width:320px"></td><td>${pc(reqAvg(i))}</td><td>${del("r"+i,"Remover")}</td></tr>`).join("")}</tbody></table></div>`
-},
-
-regs(){
-const nacional=avg(S.plants.map(idx));
-const L=list();
-const g=regs().map(r=>{
-const P=S.plants.filter(p=>p.r===r);
-return [r,P,avg(P.map(idx))];
-}).sort((a,b)=>(b[2]||0)-(a[2]||0));
-
-const filtroAtivo=!!flt||!!pflt;
-
-return `<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr));margin-bottom:16px">
-<div class="card" style="border-top-color:var(--warn)">
-<div class="lb">Média nacional</div>
-<div class="big ${nacional>=S.ideal?'ok':''}">${pc(nacional)}</div>
-${bar(nacional,1)}
-<div class="sub" style="margin-top:8px">
-${S.plants.length} planta(s) avaliada(s) · meta ideal ${pc(S.ideal)}
-</div>
-</div>
-
-<div class="card">
-<div class="lb">Escopo exibido</div>
-<div class="big" style="font-size:26px">${L.length}</div>
-<div class="sub" style="margin-top:8px">
-${filtroAtivo
-? `Filtro aplicado: ${esc(flt||"Todas as regionais")} · ${esc(pflt||"Todas as unidades/plantas")}`
-: "Nenhum filtro aplicado · exibindo todas as plantas"}
-</div>
-</div>
-</div>
-
-<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr))">
-${g.map(([r,P,m])=>`
-<div class="card">
-<div class="lb">Regional</div>
-<div class="big">${esc(r)}
-<span style="font-size:22px" class="${m>=S.ideal?'ok':''}">${pc(m)}</span>
-</div>
-${bar(m,1)}
-<div class="sub" style="margin-top:8px">
-${P.length} planta(s): ${esc(P.map(p=>p.n).join(", "))}
-</div>
-<div class="sub" style="margin-top:6px">
-${nacional==null||m==null
-? "Sem comparação disponível"
-: m>=nacional
-? `Acima da média nacional em ${((m-nacional)*100).toFixed(1)} p.p.`
-: `Abaixo da média nacional em ${((nacional-m)*100).toFixed(1)} p.p.`}
-</div>
-</div>`).join("")}
-</div>`
-},
-
-dados(){
-return `<div class="card p" style="margin-bottom:16px"><h3>Meta de maturidade ideal</h3><span class="sub">Hoje: ${pc(S.ideal)}</span><div class="form"><input id="ideal" type="number" min="0" max="1" step="0.05" value="${S.ideal}"><button class="btn" data-a="ideal">Salvar meta</button></div>
+<tr><td><b>Média por requisito</b></td>${S.reqs.map((_,i)=>`<td><b>${pc(reqAvg(i))}</b></td>`).join("")}<td><b>${pc(avg(L.map(idx)))}</b></td></tr></tbody></table></div>`},
+plantas(){return `<div class="form"><input id="pn" placeholder="Nome da planta"><input id="pr" list="rl" placeholder="Regional (ex: NE)" size="12"><datalist id="rl">${regs().map(r=>`<option value="${esc(r)}">`).join("")}</datalist><button class="btn" data-a="addp">+ Adicionar planta</button></div>
+<div class="tw"><table><thead><tr><th>Planta</th><th>Regional</th><th>Índice</th><th></th></tr></thead><tbody>${list().map(p=>`<tr><td><input data-f="n:${p.id}" value="${esc(p.n)}"></td><td><input data-f="r:${p.id}" value="${esc(p.r)}" style="min-width:70px"></td><td>${pc(idx(p))}</td><td>${del("p"+p.id,"Remover")}</td></tr>`).join("")}</tbody></table></div>`},
+reqs(){return `<div class="form"><input id="rn" placeholder="Novo requisito" size="34"><button class="btn" data-a="addr">+ Adicionar requisito</button></div>
+<div class="tw"><table><thead><tr><th>#</th><th>Requisito</th><th>Média</th><th></th></tr></thead><tbody>${S.reqs.map((r,i)=>`<tr><td>R${i+1}</td><td><input data-f="q:${i}" value="${esc(r)}" style="min-width:320px"></td><td>${pc(reqAvg(i))}</td><td>${del("r"+i,"Remover")}</td></tr>`).join("")}</tbody></table></div>`},
+regs(){const g=regs().map(r=>{const P=S.plants.filter(p=>p.r===r);return [r,P,avg(P.map(idx))]}).sort((a,b)=>(b[2]||0)-(a[2]||0));
+return `<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(230px,1fr))">${g.map(([r,P,m])=>`<div class="card"><div class="lb">Regional</div><div class="big">${esc(r)} <span style="font-size:22px" class="${m>=S.ideal?'ok':''}">${pc(m)}</span></div>${bar(m,1)}<div class="sub" style="margin-top:8px">${P.length} planta(s): ${esc(P.map(p=>p.n).join(", "))}</div></div>`).join("")}</div>`},
+dados(){return `<div class="card p" style="margin-bottom:16px"><h3>Meta de maturidade ideal</h3><span class="sub">Hoje: ${pc(S.ideal)}</span><div class="form"><input id="ideal" type="number" min="0" max="1" step="0.05" value="${S.ideal}"><button class="btn" data-a="ideal">Salvar meta</button></div>
 <div class="lb">Escala de pontuação</div><div class="leg">${SC.map((v,i)=>`<span style="background:${col(v)}">${v} – ${SCL[i]}</span>`).join("")}</div></div>
 <div class="card p"><h3>Exportar / importar dados</h3><span class="sub">Copie o JSON para guardar um backup, ou cole um JSON e aplique para restaurar. Os dados ficam salvos neste navegador.</span>
 <textarea id="js" spellcheck="false">${esc(JSON.stringify(S,null,1))}</textarea><div class="form" style="margin-top:12px"><button class="btn" data-a="imp">Aplicar JSON colado</button><button class="btn g" data-a="copy">Copiar JSON</button>${del("reset","Restaurar dados da planilha")}<span id="msg" class="sub"></span></div></div>
@@ -302,27 +126,9 @@ return `<div class="card p" style="margin-bottom:16px"><h3>Meta de maturidade id
 <div class="card p" style="margin-top:16px"><h3>Usuários e acesso</h3><span class="sub">Admin edita tudo; leitor apenas visualiza. As contas ficam salvas neste navegador.</span>
 <div class="tw" style="margin:12px 0"><table><thead><tr><th>Usuário</th><th>Perfil</th><th></th></tr></thead><tbody>${AU.users.map(x=>`<tr><td>${esc(x.u)}${x===ME?" <span class=\"tag\">você</span>":""}</td><td><select data-ur="${esc(x.u)}"${x===ME?" disabled":""}><option value="admin"${x.role=="admin"?" selected":""}>Admin</option><option value="leitor"${x.role=="leitor"?" selected":""}>Leitor</option></select></td><td>${x===ME?"":del("u"+x.u,"Remover")}</td></tr>`).join("")}</tbody></table></div>
 <div class="form"><input id="nu" placeholder="Novo usuário"><input id="np" type="password" placeholder="Senha (mín. 6)"><select id="nr"><option value="leitor">Leitor</option><option value="admin">Admin</option></select><button class="btn" data-a="adduser">+ Adicionar</button></div>
-<div class="form"><input id="op" type="password" placeholder="Nova senha para você"><button class="btn g" data-a="chpw">Alterar minha senha</button><span id="um" class="sub"></span></div></div>`
-}
-
-};
-
-const UIT=()=>[
-["brand","Auditoria Manutenção"],
-["brand2","MATRIZ DE MATURIDADE 2024/2026"],
-...NAV.map(n=>["nav_"+n[0],n[2]]),
-...Object.keys(TT).flatMap(k=>[["t_"+k,TT[k][0]],["s_"+k,TT[k][1]]]),
-["k1","Índice de maturidade atual"],
-["k2","Diferença vs ideal"],
-["k3","Plantas na meta"],
-["k4","Requisito mais crítico"],
-["h_c","Maturidade por requisito"],
-["h_r","Ranking de plantas"],
-["h_g","Requisitos com maior gap"]
-];
-
-V.custom=()=>{
-const c=S.cfg,o=(v,l,cur)=>`<option value="${v}"${cur==v?" selected":""}>${l}</option>`;
+<div class="form"><input id="op" type="password" placeholder="Nova senha para você"><button class="btn g" data-a="chpw">Alterar minha senha</button><span id="um" class="sub"></span></div></div>`}};
+const UIT=()=>[["brand","Auditoria Manutenção"],["brand2","MATRIZ DE MATURIDADE 2024/2026"],...NAV.map(n=>["nav_"+n[0],n[2]]),...Object.keys(TT).flatMap(k=>[["t_"+k,TT[k][0]],["s_"+k,TT[k][1]]]),["k1","Índice de maturidade atual"],["k2","Diferença vs ideal"],["k3","Plantas na meta"],["k4","Requisito mais crítico"],["h_c","Maturidade por requisito"],["h_r","Ranking de plantas"],["h_g","Requisitos com maior gap"]];
+V.custom=()=>{const c=S.cfg,o=(v,l,cur)=>`<option value="${v}"${cur==v?" selected":""}>${l}</option>`;
 return `<div class="card p" style="margin-bottom:16px"><h3>Layout</h3><span class="sub">Aplicado na hora e salvo neste navegador</span>
 <div class="form"><label class="sub">Cor de destaque <input type="color" data-g="accent" value="${c.accent}"></label>
 <label class="sub">Tema <select data-g="theme">${o("auto","Automático",c.theme)}${o("dark","Escuro",c.theme)}${o("light","Claro",c.theme)}</select></label>
@@ -334,437 +140,80 @@ return `<div class="card p" style="margin-bottom:16px"><h3>Layout</h3><span clas
 <div class="form"><input id="fo" placeholder="Localizar (ex: Fabrica)"><input id="fn" placeholder="Substituir por (ex: Fábrica)"><button class="btn" data-a="repl">Substituir tudo</button><span id="rm" class="sub"></span></div></div>
 <div class="card p"><h3>Textos da interface</h3><span class="sub">Edite qualquer título ou rótulo; deixe vazio para voltar ao padrão. Plantas e requisitos são editados nas abas próprias.</span>
 <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;margin-top:12px">${UIT().map(([k,d])=>`<input data-u="${k}" value="${esc(S.ui[k]||"")}" placeholder="${esc(d)}">`).join("")}</div>
-<div class="form" style="margin-top:14px">${del("resetui","Restaurar textos e layout padrão")}</div></div>`
-};
-
+<div class="form" style="margin-top:14px">${del("resetui","Restaurar textos e layout padrão")}</div></div>`};
 let pend=null,WB=null;
 const nk=s=>String(s).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();
-
-function parseX(txt){
-const rows=txt.split(/\r?\n/).map(l=>l.split("\t").map(c=>c.trim()));
-const hi=rows.findIndex(r=>r.filter(Boolean).length>=4);
-if(hi<0)return null;
-const h=rows[hi],data=[];
-for(let i=hi+1;i<rows.length;i++){
-if(!rows[i].some(Boolean)){if(data.length)break;continue}
-data.push(rows[i])
-}
-const num=v=>{
-if(v==null||v==="")return null;
-const x=parseFloat(String(v).replace("%","").replace(",","."));
-return isNaN(x)?NaN:(/%/.test(v)?x/100:x)
-};
-const sc=[],tx=[];
-h.forEach((n,j)=>{
-if(!n||/índice|indice|ideal|m[eé]dia|maior|menor|diferen/i.test(n))return;
-const vals=data.map(r=>r[j]).filter(v=>v!=null&&v!=="");
-(!vals.length||vals.every(v=>!isNaN(num(v)))?sc:tx).push(j)
-});
+function parseX(txt){const rows=txt.split(/\r?\n/).map(l=>l.split("\t").map(c=>c.trim()));
+const hi=rows.findIndex(r=>r.filter(Boolean).length>=4);if(hi<0)return null;
+const h=rows[hi],data=[];for(let i=hi+1;i<rows.length;i++){if(!rows[i].some(Boolean)){if(data.length)break;continue}data.push(rows[i])}
+const num=v=>{if(v==null||v==="")return null;const x=parseFloat(String(v).replace("%","").replace(",","."));return isNaN(x)?NaN:(/%/.test(v)?x/100:x)};
+const sc=[],tx=[];h.forEach((n,j)=>{if(!n||/índice|indice|ideal|m[eé]dia|maior|menor|diferen/i.test(n))return;const vals=data.map(r=>r[j]).filter(v=>v!=null&&v!=="");(!vals.length||vals.every(v=>!isNaN(num(v)))?sc:tx).push(j)});
 if(!tx.length||!sc.length)return null;
 let cp=tx.find(j=>/planta|unidade|site/i.test(h[j])),cr=tx.find(j=>/regional/i.test(h[j]));
-if(cp==null)cp=tx.find(j=>j!==cr);
-if(cr==null)cr=tx.find(j=>j!==cp);
-if(cp==null)return null;
+if(cp==null)cp=tx.find(j=>j!==cr);if(cr==null)cr=tx.find(j=>j!==cp);if(cp==null)return null;
 const reqs=sc.map(j=>fx(h[j]));
-const plants=data.filter(r=>r[cp]&&!/índice|indice|m[eé]dia|total/i.test(r[cp])).map(r=>({n:fx(r[cp]),r:cr!=null&&r[cr]?r[cr]:"—",s:sc.map(j=>{
-const x=num(r[j]);
-return x==null||isNaN(x)||x<0||x>1?null:x
-})}));
-return{reqs,plants}
-}
-
-function applyX(mode){
-const p=pend;
-if(!p)return;
-if(mode=="replace"){
-const u=S.ui,c=S.cfg,i=S.ideal;
-S={ideal:i,reqs:p.reqs,plants:p.plants.map((x,k)=>({...x,id:Date.now()+k}))};
-S.ui=u;S.cfg=c
-}else{
-p.reqs.forEach(r=>{
-if(!S.reqs.some(q=>nk(q)==nk(r))){
-S.reqs.push(r);
-S.plants.forEach(x=>x.s.push(null))
-}
-});
-p.plants.forEach((x,k)=>{
-let t=S.plants.find(q=>nk(q.n)==nk(x.n));
-if(!t){
-t={id:Date.now()+k,n:x.n,r:x.r,s:S.reqs.map(()=>null)};
-S.plants.push(t)
-}else if(x.r!=="—")t.r=x.r;
-p.reqs.forEach((r,j)=>{
-const i=S.reqs.findIndex(q=>nk(q)==nk(r));
-if(x.s[j]!=null)t.s[i]=x.s[j]
-})
-})
-}
-norm();save();pend=null;view="geral";render()
-}
-
-const sheetX=n=>{
-if(WB)$("#xt").value=XLSX.utils.sheet_to_csv(WB.Sheets[n],{FS:"\t",rawNumbers:true})
-};
-
-function loadX(f){
-if(!f)return;
-const m=$("#xm");
-if(typeof XLSX=="undefined"){
-m.textContent="Leitor de Excel indisponível; cole as células copiadas.";
-return
-}
-const r=new FileReader();
-r.onload=()=>{
-try{
-WB=XLSX.read(r.result,{type:"array"});
-const n=WB.SheetNames;
-$("#xs").innerHTML=n.map(s=>`<option>${esc(s)}</option>`).join("");
-const g=n.find(s=>/matriz/i.test(s))||n[0];
-$("#xs").value=g;
-sheetX(g);
-m.textContent="Arquivo lido. Confira a aba e clique em Ler dados."
-}catch(e){
-m.textContent="Não foi possível ler o arquivo."
-}
-};
-r.readAsArrayBuffer(f)
-}
-
-const AK="matriz_auth_v1",SK="matriz_sess_v1";
-let ME=null,AU;
-
-try{AU=JSON.parse(localStorage.getItem(AK))}catch(e){}
-AU=AU&&AU.users?AU:{users:[]};
-
-const saveAU=()=>{try{localStorage.setItem(AK,JSON.stringify(AU))}catch(e){}},
-RO=()=>ME&&ME.role=="leitor",
-salt=()=>[...crypto.getRandomValues(new Uint8Array(8))].map(x=>x.toString(16).padStart(2,"0")).join("");
-
-const H=async(p,s)=>{
-const k=await crypto.subtle.importKey("raw",new TextEncoder().encode(p),"PBKDF2",false,["deriveBits"]);
-const b=await crypto.subtle.deriveBits({name:"PBKDF2",salt:new TextEncoder().encode(s),iterations:100000,hash:"SHA-256"},k,256);
-return[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")
-};
-
-function gate(){
-const f=!AU.users.length;
-$("#lg").innerHTML=`<div class="card" style="width:min(380px,92vw)"><div class="brand" style="padding:0 0 14px">${esc(T("brand","Auditoria Manutenção"))}<small>${f?"PRIMEIRO ACESSO · CRIAR ADMINISTRADOR":"ACESSO RESTRITO"}</small></div><div style="display:grid;gap:10px"><input id="lu" placeholder="Usuário" autocomplete="username"><input id="lp" type="password" placeholder="Senha${f?" (mín. 6 caracteres)":""}" autocomplete="${f?"new-password":"current-password"}">${f?`<input id="lp2" type="password" placeholder="Confirmar senha" autocomplete="new-password">`:""}<button class="btn" data-a="${f?"setup":"login"}" style="text-align:center">${f?"Criar e entrar":"Entrar"}</button><span id="lm" class="sub" style="color:var(--bad)"></span></div></div>`;
-applyCfg()
-}
-
-function enter(x){
-ME=x;
-try{sessionStorage.setItem(SK,x.u)}catch(e){}
-view="geral";render()
-}
-
-async function doLogin(){
-const m=$("#lm"),u=$("#lu").value.trim(),p=$("#lp").value;
-try{
-const x=AU.users.find(q=>q.u.toLowerCase()==u.toLowerCase());
-if(x&&await H(p,x.salt)===x.hash)return enter(x);
-await new Promise(r=>setTimeout(r,700));
-m.textContent="Usuário ou senha incorretos."
-}catch(e){
-m.textContent="Este navegador não suporta o login (use um endereço https)."
-}
-}
-
-async function doSetup(){
-const m=$("#lm"),u=$("#lu").value.trim(),p=$("#lp").value;
-if(u.length<3)return m.textContent="Usuário com no mínimo 3 caracteres.";
-if(p.length<6)return m.textContent="Senha com no mínimo 6 caracteres.";
-if(p!==$("#lp2").value)return m.textContent="As senhas não conferem.";
-try{
-const s=salt(),x={u,salt:s,hash:await H(p,s),role:"admin"};
-AU.users.push(x);saveAU();enter(x)
-}catch(e){
-m.textContent="Este navegador não suporta o login (use um endereço https)."
-}
-}
-
-async function addUser(){
-const m=$("#um"),u=$("#nu").value.trim(),p=$("#np").value;
-if(u.length<3||p.length<6){
-m.textContent="Usuário (mín. 3) e senha (mín. 6).";
-return
-}
-if(AU.users.some(x=>x.u.toLowerCase()==u.toLowerCase())){
-m.textContent="Usuário já existe.";
-return
-}
-const s=salt();
-AU.users.push({u,salt:s,hash:await H(p,s),role:$("#nr").value});
-saveAU();render()
-}
-
-async function chPw(){
-const m=$("#um"),p=$("#op").value;
-if(p.length<6){
-m.textContent="Senha com no mínimo 6 caracteres.";
-return
-}
-const s=salt();
-ME.salt=s;
-ME.hash=await H(p,s);
-saveAU();
-$("#op").value="";
-m.textContent="Senha alterada."
-}
-
-document.addEventListener("keydown",e=>{
-if(e.key=="Enter"&&e.target.closest&&e.target.closest("#lg")){
-const b=$("#lg button");
-b&&b.click()
-}
-});
-
-function del(k,t){
-return `<button class="btn d${armed===k?" arm":""}" data-d="${k}">${armed===k?"Confirmar?":t}</button>`
-}
-
-const TT={
-custom:["Personalizar","Layout, textos e correção de grafia"],
-geral:["Visão Geral","Indicadores consolidados da auditoria de manutenção"],
-matriz:["Matriz de Avaliação","Notas por planta e requisito — edite diretamente"],
-plantas:["Plantas","Cadastre, renomeie e remova plantas"],
-reqs:["Requisitos","Gerencie os critérios avaliados"],
-regs:["Regionais","Média de maturidade por regional"],
-dados:["Metas & Dados","Meta ideal, escala e backup"]
-};
-
-function render(){
-if(RO()&&(view=="custom"||view=="dados"))view="geral";
-const tw=$("#tw"),sl=tw?[tw.scrollLeft,tw.scrollTop]:[0,0];
-
+const plants=data.filter(r=>r[cp]&&!/índice|indice|m[eé]dia|total/i.test(r[cp])).map(r=>({n:fx(r[cp]),r:cr!=null&&r[cr]?r[cr]:"—",s:sc.map(j=>{const x=num(r[j]);return x==null||isNaN(x)||x<0||x>1?null:x})}));
+return{reqs,plants}}
+function applyX(mode){const p=pend;if(!p)return;
+if(mode=="replace"){const u=S.ui,c=S.cfg,i=S.ideal;S={ideal:i,reqs:p.reqs,plants:p.plants.map((x,k)=>({...x,id:Date.now()+k}))};S.ui=u;S.cfg=c}
+else{p.reqs.forEach(r=>{if(!S.reqs.some(q=>nk(q)==nk(r))){S.reqs.push(r);S.plants.forEach(x=>x.s.push(null))}});
+p.plants.forEach((x,k)=>{let t=S.plants.find(q=>nk(q.n)==nk(x.n));if(!t){t={id:Date.now()+k,n:x.n,r:x.r,s:S.reqs.map(()=>null)};S.plants.push(t)}else if(x.r!=="—")t.r=x.r;
+p.reqs.forEach((r,j)=>{const i=S.reqs.findIndex(q=>nk(q)==nk(r));if(x.s[j]!=null)t.s[i]=x.s[j]})})}
+norm();save();pend=null;view="geral";render()}
+const sheetX=n=>{if(WB)$("#xt").value=XLSX.utils.sheet_to_csv(WB.Sheets[n],{FS:"\t",rawNumbers:true})};
+function loadX(f){if(!f)return;const m=$("#xm");if(typeof XLSX=="undefined"){m.textContent="Leitor de Excel indisponível; cole as células copiadas.";return}
+const r=new FileReader();r.onload=()=>{try{WB=XLSX.read(r.result,{type:"array"});const n=WB.SheetNames;$("#xs").innerHTML=n.map(s=>`<option>${esc(s)}</option>`).join("");const g=n.find(s=>/matriz/i.test(s))||n[0];$("#xs").value=g;sheetX(g);m.textContent="Arquivo lido. Confira a aba e clique em Ler dados."}catch(e){m.textContent="Não foi possível ler o arquivo."}};r.readAsArrayBuffer(f)}
+const AK="matriz_auth_v1",SK="matriz_sess_v1";let ME=null,AU;try{AU=JSON.parse(localStorage.getItem(AK))}catch(e){}AU=AU&&AU.users?AU:{users:[]};
+const saveAU=()=>{try{localStorage.setItem(AK,JSON.stringify(AU))}catch(e){}},RO=()=>ME&&ME.role=="leitor";
+const salt=()=>[...crypto.getRandomValues(new Uint8Array(8))].map(x=>x.toString(16).padStart(2,"0")).join("");
+const H=async(p,s)=>{const k=await crypto.subtle.importKey("raw",new TextEncoder().encode(p),"PBKDF2",false,["deriveBits"]);const b=await crypto.subtle.deriveBits({name:"PBKDF2",salt:new TextEncoder().encode(s),iterations:100000,hash:"SHA-256"},k,256);return[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")};
+function gate(){const f=!AU.users.length;$("#lg").innerHTML=`<div class="card" style="width:min(380px,92vw)"><div class="brand" style="padding:0 0 14px">${esc(T("brand","Auditoria Manutenção"))}<small>${f?"PRIMEIRO ACESSO · CRIAR ADMINISTRADOR":"ACESSO RESTRITO"}</small></div><div style="display:grid;gap:10px"><input id="lu" placeholder="Usuário" autocomplete="username"><input id="lp" type="password" placeholder="Senha${f?" (mín. 6 caracteres)":""}" autocomplete="${f?"new-password":"current-password"}">${f?`<input id="lp2" type="password" placeholder="Confirmar senha" autocomplete="new-password">`:""}<button class="btn" data-a="${f?"setup":"login"}" style="text-align:center">${f?"Criar e entrar":"Entrar"}</button><span id="lm" class="sub" style="color:var(--bad)"></span></div></div>`;applyCfg()}
+function enter(x){ME=x;try{sessionStorage.setItem(SK,x.u)}catch(e){}view="geral";render()}
+async function doLogin(){const m=$("#lm"),u=$("#lu").value.trim(),p=$("#lp").value;try{const x=AU.users.find(q=>q.u.toLowerCase()==u.toLowerCase());if(x&&await H(p,x.salt)===x.hash)return enter(x);await new Promise(r=>setTimeout(r,700));m.textContent="Usuário ou senha incorretos."}catch(e){m.textContent="Este navegador não suporta o login (use um endereço https)."}}
+async function doSetup(){const m=$("#lm"),u=$("#lu").value.trim(),p=$("#lp").value;if(u.length<3)return m.textContent="Usuário com no mínimo 3 caracteres.";if(p.length<6)return m.textContent="Senha com no mínimo 6 caracteres.";if(p!==$("#lp2").value)return m.textContent="As senhas não conferem.";try{const s=salt(),x={u,salt:s,hash:await H(p,s),role:"admin"};AU.users.push(x);saveAU();enter(x)}catch(e){m.textContent="Este navegador não suporta o login (use um endereço https)."}}
+async function addUser(){const m=$("#um"),u=$("#nu").value.trim(),p=$("#np").value;if(u.length<3||p.length<6){m.textContent="Usuário (mín. 3) e senha (mín. 6).";return}if(AU.users.some(x=>x.u.toLowerCase()==u.toLowerCase())){m.textContent="Usuário já existe.";return}const s=salt();AU.users.push({u,salt:s,hash:await H(p,s),role:$("#nr").value});saveAU();render()}
+async function chPw(){const m=$("#um"),p=$("#op").value;if(p.length<6){m.textContent="Senha com no mínimo 6 caracteres.";return}const s=salt();ME.salt=s;ME.hash=await H(p,s);saveAU();$("#op").value="";m.textContent="Senha alterada."}
+document.addEventListener("keydown",e=>{if(e.key=="Enter"&&e.target.closest&&e.target.closest("#lg")){const b=$("#lg button");b&&b.click()}});
+let unit="";
+function fillU(){const u=$("#u"),L=S.plants.filter(p=>!flt||p.r===flt);if(unit&&!L.some(p=>p.id==unit))unit="";u.innerHTML=`<option value="">Todas as unidades</option>`+L.map(p=>`<option value="${p.id}"${p.id==unit?" selected":""}>${esc(p.n)}</option>`).join("");u.style.display=view=="regs"?"":"none"}
+const nat=()=>avg(S.plants.map(idx));
+const pp=x=>{if(x==null)return"";const d=(x-nat())*100;return Math.abs(d)<.05?"Igual à média nacional.":`${d>0?"Acima da":"Abaixo da"} média nacional em ${Math.abs(d).toFixed(1)} p.p.`};
+function bw(P,n){const a=S.reqs.map((r,i)=>[r,avg(P.map(p=>p.s[i])),i]).filter(x=>x[1]!=null);const f=s=>{const o=[...a].sort(s),k=o.slice(0,n),t=k.length?o.filter(x=>x[1]===k[0][1]).length-k.filter(x=>x[1]===k[0][1]).length:0;return[k,t]};return[f((x,y)=>y[1]-x[1]),f((x,y)=>x[1]-y[1])]}
+const trow=r=>`<div class="row" style="grid-template-columns:minmax(120px,260px) 1fr 48px"><span title="${esc(r[0])}">R${r[2]+1} · ${esc(r[0])}</span>${bar(r[1],1)}<em>${pc(r[1])}</em></div>`;
+V.regs=()=>{const N=nat(),U=unit?S.plants.find(p=>p.id==unit):null,sc=U?[U]:flt?S.plants.filter(p=>p.r===flt):S.plants,lab=U?U.n:flt?"Regional "+flt:"Média nacional",
+cards=U?(()=>{const m=idx(U),RA=avg(S.plants.filter(p=>p.r===U.r).map(idx));return `<div class="card"><div class="lb">Unidade · ${esc(U.r)}</div><div class="big" style="font-size:24px;margin-bottom:0">${esc(U.n)}</div><div class="big ${m>=S.ideal?"ok":""}" style="margin-top:2px">${pc(m)}</div>${bar(m,1)}<div class="sub" style="margin-top:8px">${m==null?"Sem notas avaliadas.":pp(m)}</div>${m==null?"":`<div class="sub" style="margin-top:6px">${m>=RA?"Acima":"Abaixo"} da média da regional ${esc(U.r)} (${pc(RA)}).</div>`}</div>`})()
+:regs().map(r=>{const P=S.plants.filter(p=>p.r===r);return[r,P,avg(P.map(idx))]}).sort((a,b)=>(b[2]||0)-(a[2]||0)).map(([r,P,m])=>`<div class="card"${r===flt?' style="border-top-color:var(--warn)"':""}><div class="lb">Regional</div><div class="big">${esc(r)} <span style="font-size:22px" class="${m>=S.ideal?"ok":""}">${pc(m)}</span></div>${bar(m,1)}<div class="sub" style="margin-top:8px">${P.length} planta(s): ${esc(P.map(p=>p.n).join(", "))}</div><div class="sub" style="margin-top:6px">${pp(m)}</div></div>`).join(""),
+[hi,lo]=bw(sc,5),
+panel=(t,[k,x])=>`<div class="card p"><h3>${t}</h3><span class="sub">${esc(lab)}</span>${k.length?k.map(trow).join("")+(x>0?`<div class="sub">+${x} outro(s) com ${pc(k[0][1])}</div>`:""):'<div class="sub">Sem notas avaliadas.</div>'}</div>`;
+return `<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(230px,1fr))"><div class="card" style="border-top-color:var(--warn)"><div class="lb">Média nacional</div><div class="big">${pc(N)}</div>${bar(N,1)}<div class="sub" style="margin-top:8px">${S.plants.length} planta(s) avaliada(s) · meta ideal ${pc(S.ideal)}</div></div><div class="card"><div class="lb">Escopo exibido</div><div class="big">${sc.length}</div><div class="sub">${U||flt?"Filtro aplicado: "+esc([flt,U&&U.n].filter(Boolean).join(" · ")):"Sem filtro (todas as unidades)"}</div></div>${cards}</div><div class="two" style="grid-template-columns:1fr 1fr">${panel(U?"Melhores notas":"Melhores temas",hi)}${panel(U?"Piores notas":"Piores temas",lo)}</div>`};
+function del(k,t){return `<button class="btn d${armed===k?" arm":""}" data-d="${k}">${armed===k?"Confirmar?":t}</button>`}
+const TT={custom:["Personalizar","Layout, textos e correção de grafia"],geral:["Visão Geral","Indicadores consolidados da auditoria de manutenção"],matriz:["Matriz de Avaliação","Notas por planta e requisito — edite diretamente"],plantas:["Plantas","Cadastre, renomeie e remova plantas"],reqs:["Requisitos","Gerencie os critérios avaliados"],regs:["Regionais","Média de maturidade por regional"],dados:["Metas & Dados","Meta ideal, escala e backup"]};
+function render(){if(RO()&&(view=="custom"||view=="dados"))view="geral";const tw=$("#tw"),sl=tw?[tw.scrollLeft,tw.scrollTop]:[0,0];
 $("#nav").innerHTML=NAV.filter(n=>!(RO()&&(n[0]=="custom"||n[0]=="dados"))).map(n=>`<button data-v="${n[0]}" class="${view==n[0]?"on":""}">${n[1]} ${T("nav_"+n[0],n[2])}${n[0]=="plantas"?`<span class="n">${S.plants.length}</span>`:n[0]=="reqs"?`<span class="n">${S.reqs.length}</span>`:""}</button>`).join("")+`<button data-a="logout">⎋ Sair (${esc(ME.u)})</button>`;
-
-$("#t").textContent=T("t_"+view,TT[view][0]);
-$("#st").textContent=T("s_"+view,TT[view][1]);
-$("#bt").textContent=T("brand","Auditoria Manutenção");
-$("#bs").textContent=T("brand2","MATRIZ DE MATURIDADE 2024/2026");
-applyCfg();
-
-$("#f").innerHTML=`<option value="">Todas as regionais</option>`+regs().map(r=>`<option${r===flt?" selected":""}>${esc(r)}</option>`).join("");
-
-const plantasFiltro=S.plants.filter(p=>!flt||p.r===flt);
-
-$("#fp").innerHTML=`<option value="">Todas as unidades/plantas</option>`+
-plantasFiltro.map(p=>`<option value="${esc(p.n)}"${pflt===p.n?" selected":""}>${esc(p.n)}</option>`).join("");
-
-const mostrarFiltros=["geral","matriz","plantas","reqs","regs"].includes(view);
-
-$("#f").style.display=mostrarFiltros?"":"none";
-$("#fp").style.display=mostrarFiltros?"":"none";
-
-$("#v").innerHTML=V[view]();
-
-if(RO())$("#v").querySelectorAll("input,select,textarea,button").forEach(e=>e.disabled=true);
-
-$("#foot").textContent="Escala 0–1 · meta "+pc(S.ideal)+" · dados salvos localmente";
-
-const t2=$("#tw");
-if(t2){
-t2.scrollLeft=sl[0];
-t2.scrollTop=sl[1]
-}
-}
-
-document.addEventListener("click",e=>{
-const b=e.target.closest("button");
-if(!b)return;
-
-if(b.dataset.v){
-view=b.dataset.v;
-armed=null;
-return render()
-}
-
-if(b.dataset.d){
-const k=b.dataset.d;
-if(armed!==k){
-armed=k;render();
-setTimeout(()=>{
-if(armed===k){
-armed=null;render()
-}
-},3500);
-return
-}
-armed=null;
-if(k=="reset"){
-const u=S.ui,c=S.cfg;
-S=fresh();
-S.ui=u;S.cfg=c;norm()
-}else if(k=="resetui"){
-S.ui={};delete S.cfg;norm()
-}else if(k[0]=="u"){
-AU.users=AU.users.filter(x=>x.u!==k.slice(1));saveAU()
-}else if(k[0]=="p"){
-S.plants=S.plants.filter(p=>p.id!=k.slice(1))
-}else{
-const i=+k.slice(1);
-S.reqs.splice(i,1);
-S.plants.forEach(p=>p.s.splice(i,1))
-}
-save();return render()
-}
-
-const a=b.dataset.a;
-
-if(a=="addp"){
-const n=$("#pn").value.trim();
-if(!n)return;
-S.plants.push({id:Date.now(),n,r:$("#pr").value.trim()||"—",s:S.reqs.map(()=>null)});
-save();render()
-}
-
-if(a=="addr"){
-const n=$("#rn").value.trim();
-if(!n)return;
-S.reqs.push(n);
-S.plants.forEach(p=>p.s.push(null));
-save();render()
-}
-
-if(a=="ideal"){
-const v=parseFloat($("#ideal").value);
-if(v>=0&&v<=1){
-S.ideal=v;save();render()
-}
-}
-
-if(a=="imp"){
-try{
-const j=JSON.parse($("#js").value);
-if(!j.plants||!j.reqs)throw 0;
-S=j;norm();save();render()
-}catch(x){
-$("#msg").textContent="JSON inválido."
-}
-}
-
-if(a=="repl"){
-const o=$("#fo").value,n=$("#fn").value;
-if(!o)return;
-let c=0;
-const R=s=>{
-const k=s.split(o).length-1;
-c+=k;
-return k?s.split(o).join(n):s
-};
-S.reqs=S.reqs.map(R);
-S.plants.forEach(p=>{
-p.n=R(p.n);
-p.r=R(p.r)
-});
-UIT().forEach(([k,d])=>{
-const cur=S.ui[k]||d,r=R(cur);
-if(r!==cur)S.ui[k]=r
-});
-save();render();
-$("#rm").textContent=c+" ocorrência(s) alterada(s).";
-return
-}
-
-if(a=="login"){doLogin();return}
-if(a=="setup"){doSetup();return}
-if(a=="adduser"){addUser();return}
-if(a=="chpw"){chPw();return}
-
-if(a=="logout"){
-try{sessionStorage.removeItem(SK)}catch(e){}
-ME=null;gate();return
-}
-
-if(a=="xread"){
-pend=parseX($("#xt").value);
-$("#xm").innerHTML=pend&&pend.plants.length
-? `${pend.plants.length} planta(s) e ${pend.reqs.length} requisito(s) lidos (primeira: ${esc(pend.plants[0].n)}). <button class="btn" data-a="xapply">Aplicar</button>`
-: "Não reconheci a tabela. Confira se há cabeçalho, uma coluna de planta e colunas numéricas de 0 a 1.";
-if(!(pend&&pend.plants.length))pend=null;
-return
-}
-
+$("#t").textContent=T("t_"+view,TT[view][0]);$("#st").textContent=T("s_"+view,TT[view][1]);$("#bt").textContent=T("brand","Auditoria Manutenção");$("#bs").textContent=T("brand2","MATRIZ DE MATURIDADE 2024/2026");applyCfg();
+$("#f").innerHTML=`<option value="">Todas as regionais</option>`+regs().map(r=>`<option${r===flt?" selected":""}>${esc(r)}</option>`).join("");$("#f").style.display=["geral","matriz","plantas","reqs","regs"].includes(view)?"":"none";fillU();
+$("#v").innerHTML=V[view]();if(RO())$("#v").querySelectorAll("input,select,textarea,button").forEach(e=>e.disabled=true);$("#foot").textContent="Escala 0–1 · meta "+pc(S.ideal)+" · dados salvos localmente";
+const t2=$("#tw");if(t2){t2.scrollLeft=sl[0];t2.scrollTop=sl[1]}}
+document.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
+if(b.dataset.v){view=b.dataset.v;armed=null;return render()}
+if(b.dataset.d){const k=b.dataset.d;if(armed!==k){armed=k;render();setTimeout(()=>{if(armed===k){armed=null;render()}},3500);return}
+armed=null;if(k=="reset"){const u=S.ui,c=S.cfg;S=fresh();S.ui=u;S.cfg=c;norm()}else if(k=="resetui"){S.ui={};delete S.cfg;norm()}else if(k[0]=="u"){AU.users=AU.users.filter(x=>x.u!==k.slice(1));saveAU()}else if(k[0]=="p")S.plants=S.plants.filter(p=>p.id!=k.slice(1));else{const i=+k.slice(1);S.reqs.splice(i,1);S.plants.forEach(p=>p.s.splice(i,1))}save();return render()}
+const a=b.dataset.a;if(a=="addp"){const n=$("#pn").value.trim();if(!n)return;S.plants.push({id:Date.now(),n,r:$("#pr").value.trim()||"—",s:S.reqs.map(()=>null)});save();render()}
+if(a=="addr"){const n=$("#rn").value.trim();if(!n)return;S.reqs.push(n);S.plants.forEach(p=>p.s.push(null));save();render()}
+if(a=="ideal"){const v=parseFloat($("#ideal").value);if(v>=0&&v<=1){S.ideal=v;save();render()}}
+if(a=="imp"){try{const j=JSON.parse($("#js").value);if(!j.plants||!j.reqs)throw 0;S=j;norm();save();render()}catch(x){$("#msg").textContent="JSON inválido."}}
+if(a=="repl"){const o=$("#fo").value,n=$("#fn").value;if(!o)return;let c=0;const R=s=>{const k=s.split(o).length-1;c+=k;return k?s.split(o).join(n):s};S.reqs=S.reqs.map(R);S.plants.forEach(p=>{p.n=R(p.n);p.r=R(p.r)});UIT().forEach(([k,d])=>{const cur=S.ui[k]||d,r=R(cur);if(r!==cur)S.ui[k]=r});save();render();$("#rm").textContent=c+" ocorrência(s) alterada(s).";return}
+if(a=="login"){doLogin();return}if(a=="setup"){doSetup();return}if(a=="adduser"){addUser();return}if(a=="chpw"){chPw();return}
+if(a=="logout"){try{sessionStorage.removeItem(SK)}catch(e){}ME=null;gate();return}
+if(a=="xread"){pend=parseX($("#xt").value);$("#xm").innerHTML=pend&&pend.plants.length?`${pend.plants.length} planta(s) e ${pend.reqs.length} requisito(s) lidos (primeira: ${esc(pend.plants[0].n)}). <button class="btn" data-a="xapply">Aplicar</button>`:"Não reconheci a tabela. Confira se há cabeçalho, uma coluna de planta e colunas numéricas de 0 a 1.";if(!(pend&&pend.plants.length))pend=null;return}
 if(a=="xapply"){applyX($("#xmode").value);return}
-
-if(a=="copy"){
-const t=$("#js");
-t.select();
-try{
-navigator.clipboard.writeText(t.value);
-document.execCommand&&document.execCommand("copy")
-}catch(x){}
-$("#msg").textContent="Copiado (ou selecionado para Ctrl+C)."
-}
-});
-
-document.addEventListener("change",e=>{
-const t=e.target;
-
-if(t.id=="f"){
-flt=t.value;
-pflt="";
-return render()
-}
-
-if(t.id=="fp"){
-pflt=t.value;
-return render()
-}
-
-if(t.dataset.ur){
-const x=AU.users.find(q=>q.u===t.dataset.ur);
-if(x&&x!==ME){
-x.role=t.value;saveAU()
-}
-return render()
-}
-
-if(t.id=="xf")return loadX(t.files[0]);
-if(t.id=="xs")return sheetX(t.value);
-
-if(t.dataset.g){
-S.cfg[t.dataset.g]=t.type=="number"?+t.value:t.value;
-save();return render()
-}
-
-if(t.dataset.sh){
-S.cfg.show[t.dataset.sh]=t.checked?1:0;
-save();return render()
-}
-
-if(t.dataset.u){
-const v=t.value.trim();
-if(v)S.ui[t.dataset.u]=v;
-else delete S.ui[t.dataset.u];
-save();return render()
-}
-
-if(t.dataset.c){
-const[id,i]=t.dataset.c.split(":");
-S.plants.find(p=>p.id==id).s[i]=t.value===""?null:+t.value;
-save();render()
-}
-});
-
-document.addEventListener("input",e=>{
-const f=e.target.dataset.f;
-if(!f)return;
-const[k,id]=f.split(":");
-if(k=="q")S.reqs[+id]=e.target.value;
-else{
-const p=S.plants.find(p=>p.id==id);
-p[k]=e.target.value
-}
-save()
-});
-
-try{
-ME=AU.users.find(u=>u.u===sessionStorage.getItem(SK))||null
-}catch(e){}
-
+if(a=="copy"){const t=$("#js");t.select();try{navigator.clipboard.writeText(t.value);document.execCommand&&document.execCommand("copy")}catch(x){}$("#msg").textContent="Copiado (ou selecionado para Ctrl+C)."}});
+document.addEventListener("change",e=>{const t=e.target;if(t.id=="f"){flt=t.value;unit="";return render()}if(t.id=="u"){unit=t.value;return render()}
+if(t.dataset.ur){const x=AU.users.find(q=>q.u===t.dataset.ur);if(x&&x!==ME){x.role=t.value;saveAU()}return render()}
+if(t.id=="xf")return loadX(t.files[0]);if(t.id=="xs")return sheetX(t.value);
+if(t.dataset.g){S.cfg[t.dataset.g]=t.type=="number"?+t.value:t.value;save();return render()}if(t.dataset.sh){S.cfg.show[t.dataset.sh]=t.checked?1:0;save();return render()}if(t.dataset.u){const v=t.value.trim();if(v)S.ui[t.dataset.u]=v;else delete S.ui[t.dataset.u];save();return render()}
+if(t.dataset.c){const[id,i]=t.dataset.c.split(":");S.plants.find(p=>p.id==id).s[i]=t.value===""?null:+t.value;save();render()}});
+document.addEventListener("input",e=>{const f=e.target.dataset.f;if(!f)return;const[k,id]=f.split(":");if(k=="q")S.reqs[+id]=e.target.value;else{const p=S.plants.find(p=>p.id==id);p[k]=e.target.value}save()});
+try{ME=AU.users.find(u=>u.u===sessionStorage.getItem(SK))||null}catch(e){}
 ME?render():gate();
-</script>
-</body>
-</html>
+</script></body></html>
