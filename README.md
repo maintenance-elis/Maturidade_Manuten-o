@@ -10,4 +10,4 @@ Link de Acesso:
 
 https://miro.com/app/board/uXjVEVd2Hyc=/?focusWidget=3458764688565421596
 
-app.diagrams.net
+https://app.diagrams.net/
